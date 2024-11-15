@@ -13,7 +13,7 @@ import textwrap
 import os
 from PIL import Image
 from io import BytesIO
-from datetime import datetime
+import datetime as dt
 from dotenv import load_dotenv
 
 # Cargar las variables de entorno desde el archivo .env
@@ -53,7 +53,7 @@ def get_movie_details(id):
 
     # Validar y convertir la fecha de lanzamiento  
     if re.search(r"\d{4}-\d{2}-\d{2}", movie_details["release_date"]):
-        release_date = datetime.strptime(movie_details["release_date"], "%Y-%m-%d").year
+        release_date = dt.datetime.strptime(movie_details["release_date"], "%Y-%m-%d").year
     else:
         release_date = None
 
@@ -183,7 +183,7 @@ def question_release_date(movies_details_df, dificulty):
     correct_answer_release_date = correct_answer["Lanzamiento"].item()
 
     # Crear una lista de años, no superiores al actual ni iguales al correcto, en función del nivel de dificultad
-    current_year = datetime.today().year
+    current_year = dt.datetime.today().year
     years_list = list(range(correct_answer_release_date-int(64/dificulty**2), correct_answer_release_date+int(64/dificulty**2)))
     years_list = [year for year in years_list if (year <= current_year) & (year != correct_answer_release_date)]
 
@@ -303,7 +303,7 @@ def question_details(movies_details_df):
     correct_answer_details += f"¿Cuál de las siguientes 4 películas se estrenó el {correct_answer_release}, "
     if (correct_answer_budget > 0) & (correct_answer_revenue > 0):
         correct_answer_details += f"con un presupuesto de {correct_answer_budget:,}$ y una recaudación de {correct_answer_revenue:,}$, que "
-    correct_answer_details += f"podría enmaracarse dentro de {correct_answer_genres}, "
+    correct_answer_details += f"podría enmarcarse dentro de {correct_answer_genres}, "
     correct_answer_details += f"y tiene una duración de {correct_answer_runtime} min?"    
     formatted_details = textwrap.fill(correct_answer_details, width=line_width)
     print(formatted_details)
@@ -457,7 +457,7 @@ print((f"\n¡Hola, {user_name}!\n\n¡Bienvenido a Popcorn Quiz, el juego de preg
        "1. Adivina el año de lanzamiento de una película.\n"
        "2. Adivina a qué película corresponde el resumen enmascarado.\n"
        "3. Adivina a qué película corresponden los detalles de producción.\n"
-       "4. Adivina a qué película corresponde el trozo de cartel que te mostramos\n\n"
+       "4. Adivina a qué película corresponde el trozo de cartel que te mostramos.\n\n"
        "Además, puedes jugar en cuatro niveles de dificultad distintos. Cada nivel\n"
        "hace que juegues con películas más o menos populares, además de que\n"
        "en las distintas preguntas habrá matices para complicar más o menos el juego.\n\n"
@@ -472,8 +472,13 @@ dificulty_label = dificulty_labels[dificulty]
 
 print(f"\nPerfecto, has elegido el nivel de dificultad {dificulty_label}. Dame un momento mientras preparo todo...")
 
-## Obtener el dataframe con las películas
-url = "http://files.tmdb.org/p/exports/movie_ids_05_15_2024.json.gz"
+## Obtener el dataframe con las películas, actualizado a una semana atrás
+one_week_ago = dt.datetime.today() + dt.timedelta(days=-7)
+year = one_week_ago.year
+month = f"{one_week_ago.month:02d}"
+day = f"{one_week_ago.day:02d}"
+
+url = f"http://files.tmdb.org/p/exports/movie_ids_{month}_{day}_{year}.json.gz"
 movies_details_df = obtain_movies_df(url, dificulty)
 
 ## Instancia el contador y comienza el juego
